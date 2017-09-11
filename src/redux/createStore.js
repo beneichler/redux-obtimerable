@@ -1,10 +1,20 @@
-import { combineReducers, createStore } from 'redux';
-import timer from '../ducks/timer';
+import { combineReducers, createStore, applyMiddleware } from 'redux';
+import { createEpicMiddleware, combineEpics } from 'redux-observable';
+import { composeWithDevTools } from 'redux-devtools-extension';
 
-const rootReducer = combineReducers({
-  timer
-});
+import timer, { tick$, reset$, stop$, keydown$ } from '../ducks/timer';
 
-const store = createStore(rootReducer);
+const rootEpic = combineEpics(tick$, reset$, stop$, keydown$); // yes it has a different signature than combineReducers
+
+const rootReducer = combineReducers({ timer });
+
+const epicMiddleware = createEpicMiddleware(rootEpic);
+
+const store = createStore(
+  rootReducer,
+  composeWithDevTools(
+    applyMiddleware(epicMiddleware)
+  )
+);
 
 export default store;
